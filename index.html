@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="ext-resource-dependency" content="assets/stamp.png" data-resource-id="stamp" />
+<meta name="ext-resource-dependency" content="assets/pic1.jpg" data-resource-id="pic1" />
+<meta name="ext-resource-dependency" content="assets/pic2.jpg" data-resource-id="pic2" />
+<meta name="ext-resource-dependency" content="assets/pic4.jpg" data-resource-id="pic4" />
+<title>ถึงยูนิก ✨</title>
+<style>
+/* =========================================================================
+   🎨 สีธีม — แก้ได้ตรงนี้
+========================================================================= */
+:root{
+  --gold:       #ffd86b;   /* ทอง (ดาว)        */
+  --gold-soft:  #fff3c8;   /* ทองอ่อน          */
+  --sky-top:    #0a0f2c;   /* ฟ้ากลางคืนบน     */
+  --sky-mid:    #101a44;   /* ฟ้ากลางคืนกลาง   */
+  --sky-low:    #1c2456;   /* ฟ้ากลางคืนล่าง   */
+  --glow:       255,196,92;/* สีเรืองแสง (rgb) */
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  font-family: "Trebuchet MS", "Segoe UI", "Noto Sans Thai", sans-serif;
+  overflow: hidden;
+  position: fixed; inset: 0;
+  -webkit-tap-highlight-color: transparent;
+  background: var(--sky-top);
+}
+
+/* ── ท้องฟ้ากลางคืน ─────────────────────────────────────────── */
+#sky{
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(130% 90% at 50% 122%, rgba(var(--glow),.30), transparent 55%),
+    linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 44%, var(--sky-low) 100%);
+}
+/* หมอกดาว (Milky-way) จาง ๆ */
+#sky::after{
+  content:""; position:absolute; inset:0;
+  background: radial-gradient(60% 40% at 70% 30%, rgba(180,200,255,.10), transparent 60%);
+}
+
+/* ── ดาวประดับบนฟ้า (fade in หลังกด) ───────────────────────── */
+#starfield{
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  opacity: 0; transition: opacity 1400ms ease;
+}
+#starfield.on{ opacity: 1; }
+.tw{
+  position: absolute; border-radius: 50%;
+  background: #fff; box-shadow: 0 0 6px rgba(255,240,200,.9);
+  animation: twinkle var(--d,3s) ease-in-out infinite;
+  transition: background 1600ms ease, box-shadow 1600ms ease;
+  will-change: opacity, transform;
+}
+.tw.gold{ background: var(--gold); box-shadow: 0 0 8px var(--gold), 0 0 16px rgba(var(--glow),.7); }
+/* หลังหัวใจพ้นจอ : ดาวพื้นหลังกลายเป็นสีชมพู */
+#starfield.pink .tw,
+#starfield.pink .tw.gold{
+  background: #ff9dc0;
+  box-shadow: 0 0 8px #ff8fb3, 0 0 18px rgba(255,92,146,.8);
+}
+@keyframes twinkle{
+  0%,100%{ opacity:.2; transform: scale(.7); }
+  50%    { opacity:1;  transform: scale(1.15); }
+}
+
+/* ── canvas อนุภาค (ดาวกระจาย) ─────────────────────────────── */
+#fx{ position: fixed; inset: 0; z-index: 2; pointer-events: none; }
+
+/* ── ดาวตก (shooting stars) ───────────────────────────────── */
+#shootLayer{ position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+.shoot{
+  position: absolute; width: 3px; height: 3px; border-radius: 50%;
+  background: #fff; box-shadow: 0 0 8px 2px rgba(255,240,200,.9);
+  opacity: 0;
+}
+.shoot::after{
+  content: ""; position: absolute; top: 50%; right: 2px;
+  width: clamp(120px, 22vw, 240px); height: 2px; transform: translateY(-50%);
+  background: linear-gradient(270deg, rgba(255,240,200,.95), rgba(255,240,200,0));
+  border-radius: 2px;
+}
+@keyframes shootFly{
+  0%   { opacity: 0; transform: translate(0,0) rotate(var(--a,20deg)); }
+  8%   { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx,-70vw), var(--dy,42vh)) rotate(var(--a,20deg)); }
+}
+
+/* ── โลกที่ซูมเข้าไป : หัวใจดาว (พุ่งผ่านกล้อง) ────────── */
+#zoomWorld{
+  position: fixed; inset: 0; z-index: 1;
+  display: none; align-items: center; justify-content: center;
+  transform-origin: 50% 46%;
+}
+#zoomWorld.on{ display: flex; animation: zoomThrough 14s cubic-bezier(.42,0,.7,1) forwards; }
+@keyframes zoomThrough{
+  0%   { transform: scale(.26); opacity: 1; }
+  68%  { transform: scale(2);   opacity: 1; }
+  100% { transform: scale(7.5); opacity: 0; }
+}
+#heart{
+  position: relative;
+  width: min(78vmin, 620px); height: min(78vmin, 620px);
+  animation: heartGlow 2.6s ease-in-out infinite;
+  will-change: filter;
+}
+@keyframes heartGlow{
+  0%,100%{ filter: drop-shadow(0 0 10px rgba(255,120,170,.5)); }
+  50%    { filter: drop-shadow(0 0 26px rgba(255,120,170,.95)); }
+}
+.hs{
+  position: absolute; border-radius: 50%;
+  background: #ffd0e2; box-shadow: 0 0 8px rgba(255,140,185,.95), 0 0 16px rgba(255,92,146,.7);
+  transform: translate(-50%,-50%);
+  animation: twinkle var(--d,3s) ease-in-out infinite;
+  will-change: opacity, transform;
+}
+.hs.core{ background:#fff; box-shadow: 0 0 10px #ff8fb3, 0 0 22px rgba(255,92,146,.9); }
+
+/* ── เนื้อเพลง : พุ่งผ่านกล้องทีละชุด ─────────────────── */
+#lyricLayer{
+  position: fixed; inset: 0; z-index: 3; pointer-events: none; overflow: hidden;
+}
+.lyric{
+  position: absolute;
+  max-width: min(30vw, 320px);
+  font-size: clamp(15px, 2.7vw, 25px); font-weight: 600; color: #fff;
+  line-height: 1.35; opacity: 0;
+  text-shadow: 0 0 16px rgba(255,120,170,.8);
+  transform-origin: center center;
+  will-change: transform, opacity;
+  animation: zoomSide 5.4s cubic-bezier(.3,0,.6,1) forwards;
+  --dir: -1;
+}
+.lyric.left { text-align: left;  --dir: -1; }
+.lyric.right{ text-align: right; --dir:  1; }
+@keyframes zoomSide{
+  0%  { opacity: 0;   transform: translateX(calc(var(--dir) * -22px)) scale(.45); }
+  22% { opacity: .3;  }
+  72% { opacity: .3;  }
+  100%{ opacity: 0;   transform: translateX(calc(var(--dir) * 46px)) scale(1.18); }
+}
+
+/* ── canvas อนุภาค (ดาวกระจาย) ─────────────────────────────── */
+#fx{ position: fixed; inset: 0; z-index: 2; pointer-events: none; }
+
+/* ── หน้าเริ่ม : ซองจดหมายที่ดาวส่งมา ── */
+#intro{
+  position: fixed; inset: 0; z-index: 3;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 34px;
+  animation: fadeUp 1200ms ease both;
+}
+#starBtn{
+  border: none; background: transparent; cursor: pointer; padding: 0;
+  width: clamp(220px, 62vw, 380px); height: clamp(150px, 42vw, 260px);
+  display: block; position: relative;
+  animation: floaty 4.4s ease-in-out infinite;
+  transform-origin: center center;
+}
+#starBtn:active{ transform: scale(.96); }
+/* ดาวหางที่พาซองมาส่ง */
+.comet{
+  position: absolute; top: -14%; left: 8%;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 12px var(--gold), 0 0 26px rgba(var(--glow),.9),
+              -34px -14px 0 -6px rgba(255,240,200,.4), -60px -26px 0 -8px rgba(255,240,200,.2);
+  animation: cometMove 4.4s ease-in-out infinite;
+}
+@keyframes cometMove{
+  0%,100%{ transform: translate(0,0); opacity:.9; }
+  50%    { transform: translate(10px,6px); opacity:1; }
+}
+/* ซองจดหมาย */
+#envelope{ position: absolute; inset: 0; filter: drop-shadow(0 16px 34px rgba(80,20,50,.55)); }
+#envelope > div{ position: absolute; }
+.env-body{
+  inset: 22% 0 0 0; border-radius: 10px;
+  background: linear-gradient(160deg, #fff3d8, #ffe3ad);
+}
+.env-pocket{
+  inset: 22% 0 0 0; border-radius: 10px;
+  background: linear-gradient(160deg, #ffe0a8, #f6c877);
+  clip-path: polygon(0 100%, 0 8%, 50% 62%, 100% 8%, 100% 100%);
+  z-index: 2;
+}
+.env-addr{
+  position: absolute; left: 0; right: 0; bottom: 15%; text-align: center;
+  font-family: "Segoe Print","Bradley Hand","Noto Serif Thai",Georgia,serif;
+  font-size: clamp(16px,4.4vw,24px); color: #9c5f34; letter-spacing: .5px; z-index: 5;
+}
+.env-stamp{
+  position: absolute; top: 26%; right: 7%;
+  width: clamp(44px,12vw,66px); aspect-ratio: 1/1.1;
+  background: url('assets/stamp.png') center/contain no-repeat;
+  transform: rotate(7deg); z-index: 5;
+  filter: drop-shadow(0 2px 5px rgba(60,20,40,.35));
+}
+.env-paper{
+  inset: 8% 8% 0 8%; border-radius: 6px 6px 0 0;
+  background:
+    linear-gradient(rgba(255,255,255,0) 0, rgba(255,255,255,0) 15px, rgba(120,150,210,.3) 15px, rgba(120,150,210,.3) 16px),
+    linear-gradient(#fffdf7, #fff6e6);
+  background-size: 100% 16px, 100% 100%;
+  transform: translateY(0); transition: transform 900ms cubic-bezier(.4,0,.3,1);
+  box-shadow: 0 -4px 14px rgba(150,90,30,.2);
+}
+.env-flap{
+  inset: 22% 0 auto 0; height: 44%;
+  background: linear-gradient(160deg, #ffe9bd, #f4c069);
+  clip-path: polygon(0 0, 100% 0, 50% 96%);
+  transform-origin: top center; transform: rotateX(0deg);
+  transition: transform 800ms ease; backface-visibility: hidden;
+  z-index: 3;
+}
+.env-seal{
+  top: 40%; left: 50%; transform: translate(-50%,-50%);
+  width: clamp(34px,9vw,52px); height: clamp(34px,9vw,52px);
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; font-size: clamp(18px,4.6vw,26px); color: #fff;
+  background: radial-gradient(circle at 40% 35%, #ff9dbb, var(--pink-deep,#d94f86));
+  box-shadow: 0 4px 12px rgba(150,20,70,.5), inset 0 1px 3px rgba(255,255,255,.5);
+  z-index: 4; transition: opacity 400ms ease, transform 400ms ease;
+}
+/* เปิดซอง : ฝาเปิดขึ้น กระดาษเลื่อนโผล่ ผนึกจาง */
+#starBtn.open .env-flap{ transform: rotateX(178deg); z-index: 1; }
+#starBtn.open .env-seal{ opacity: 0; transform: translate(-50%,-50%) scale(.4); }
+#starBtn.open .env-paper{ transform: translateY(-38%); }
+
+.hint{
+  font-size: clamp(14px, 3.6vw, 19px);
+  color: #ffe6a8; letter-spacing: 1px;
+  text-shadow: 0 0 12px rgba(var(--glow),.6);
+  animation: blink 2.6s ease-in-out infinite;
+}
+@keyframes blink{ 0%,100%{ opacity:.5 } 50%{ opacity:1 } }
+@keyframes floaty{
+  0%,100%{ transform: translateY(0)    rotate(-2deg); }
+  50%    { transform: translateY(-14px) rotate(2deg); }
+}
+
+/* zoom เข้าไปในซอง แล้วจาง */
+#intro.go{ animation: none; }
+#intro.go #starBtn{
+  animation: none;
+  transition: transform 1100ms cubic-bezier(.5,0,.7,.5), opacity 900ms ease 300ms;
+  transform: scale(6); opacity: 0;
+}
+#intro.go .hint{ opacity: 0; transition: opacity 260ms ease; }
+
+/* ── กระดาษจดหมาย (หลายหน้า) ── */
+#letterScene{
+  position: fixed; inset: 0; z-index: 5;
+  display: none; align-items: center; justify-content: center; padding: 5vw;
+  perspective: 1600px;
+}
+#letterScene.on{ display: flex; }
+#letterStack{
+  position: relative;
+  width: min(90vw, 540px); height: min(84vh, 720px);
+}
+/* กองกระดาษซ้อนใต้ใบบนสุด — ให้ดูเป็นปึกจดหมายจริง */
+#letterStack::before,
+#letterStack::after{
+  content: ""; position: absolute; inset: 0; border-radius: 8px;
+  background: linear-gradient(#fdf6e6, #f6ead0);
+  box-shadow: 0 20px 44px rgba(60,15,40,.4);
+}
+#letterStack::before{ transform: rotate(-2.2deg) translateY(6px); }
+#letterStack::after{  transform: rotate(1.6deg)  translateY(3px); }
+.l-page{
+  --lh: clamp(30px, 6.4vw, 38px);        /* ระยะห่างเส้นบรรทัด */
+  --pad-top: clamp(30px, 7vw, 54px);
+  position: absolute; inset: 0;
+  padding: var(--pad-top) clamp(24px,5.5vw,44px) clamp(36px,8vw,60px);
+  border-radius: 8px;
+  background:
+    linear-gradient(to bottom, transparent calc(var(--lh)*0.74), rgba(120,150,210,.30) calc(var(--lh)*0.74), rgba(120,150,210,.30) calc(var(--lh)*0.74 + 1.5px), transparent calc(var(--lh)*0.74 + 1.5px)),
+    linear-gradient(#fffdf7, #fdf3df);
+  background-size: 100% var(--lh), 100% 100%;
+  background-position: 0 var(--pad-top), 0 0;
+  background-repeat: repeat-y, no-repeat;
+  box-shadow: 0 26px 62px rgba(60,15,40,.62), inset 0 0 0 1px rgba(200,150,80,.28);
+  color: #4a3524; font-family: "Sarabun", "Noto Sans Thai", "Leelawadee UI", "Tahoma", system-ui, sans-serif;
+  display: block;
+  overflow: hidden;
+  transform-origin: 50% 120%;
+  opacity: 0; visibility: hidden;
+  transition: transform 900ms cubic-bezier(.22,1,.36,1), opacity 700ms ease;
+  will-change: transform, opacity;
+}
+/* เส้นขอบแดงด้านซ้าย (แบบสมุดจดหมาย) */
+.l-page::before{
+  content: ""; position: absolute; top: 0; bottom: 0; left: clamp(16px,4vw,34px);
+  width: 2px; background: rgba(220,120,120,.32);
+}
+/* ใบที่กำลังอ่าน */
+.l-page.active{ opacity: 1; visibility: visible; transform: translateY(0) rotate(0deg) scale(1); z-index: 2; }
+/* ใบที่อ่านไปแล้ว — ยกขึ้นพลิกออกไปด้านบน */
+.l-page.past{ opacity: 0; visibility: visible; transform: translateY(-16%) rotate(-6deg) scale(.9); z-index: 1; }
+/* ใบที่ยังไม่ถึง — ซ่อนรอด้านล่าง */
+.l-page.upcoming{ opacity: 0; visibility: hidden; transform: translateY(26%) rotate(3deg) scale(.94); z-index: 0; }
+
+.l-greet{ font-size: calc(var(--lh)*0.92); font-weight: 700; color: var(--pink-deep,#d94f86); margin: 0; line-height: calc(var(--lh)*2); padding-right: clamp(104px,28vw,158px); }
+.l-body{ font-size: calc(var(--lh)*0.56); line-height: var(--lh); white-space: pre-line; text-wrap: pretty; padding-right: clamp(104px,28vw,158px); }
+.l-sign{ margin: 0; font-size: calc(var(--lh)*0.6); font-style: italic; text-align: right; color: #8a5a3a; line-height: var(--lh); white-space: pre-line; padding-right: clamp(104px,28vw,158px); }
+/* บังคับฟอนต์เดียวกันทุกหน้า (กันฟอนต์แปลกจากการวาง/แก้ไข) */
+.l-greet, .l-body, .l-sign, .l-greet *, .l-body *, .l-sign *{
+  font-family: "Sarabun", "Noto Sans Thai", "Leelawadee UI", "Tahoma", system-ui, sans-serif !important;
+}
+.l-body *, .l-sign *, .l-greet *{ font-size: inherit !important; background: transparent !important; color: inherit !important; }
+.l-sign.pad{ padding-right: clamp(104px,28vw,142px); }
+/* รูปแนบมุมขวาล่าง (โพลารอยด์ติดเทป) */
+.l-attach{
+  position: absolute; right: clamp(14px,4vw,26px); bottom: clamp(16px,4.5vw,28px);
+  width: clamp(96px,26vw,132px);
+  background: #fffdf7; padding: 6px 6px 20px; border-radius: 3px;
+  box-shadow: 0 10px 22px rgba(60,20,40,.4);
+  transform: rotate(5deg);
+}
+.l-attach::before{
+  content: ""; position: absolute; top: -10px; left: 50%; transform: translateX(-50%) rotate(-4deg);
+  width: 54px; height: 20px; background: rgba(255,220,150,.5);
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
+}
+.l-photo{
+  width: 100%; aspect-ratio: 1/1; border-radius: 2px; background:
+    repeating-linear-gradient(45deg, #ffe0ec 0 8px, #ffd0e2 8px 16px);
+  background-size: cover; background-position: center;
+}
+.l-cap{ margin-top: 5px; text-align: center; font-family: "Courier New", monospace; font-size: 10px; color: #b06a86; }
+/* สแตมป์มุมขวาบน */
+.l-stamp{
+  position: absolute; top: clamp(14px,4vw,26px); right: clamp(14px,4vw,26px);
+  width: clamp(60px,16vw,90px); aspect-ratio: 1/1.1;
+  transform: rotate(6deg);
+  filter: drop-shadow(0 4px 8px rgba(60,20,40,.3));
+}
+.l-stamp-img{
+  width: 100%; height: 100%; background-size: contain; background-repeat: no-repeat; background-position: center;
+}
+/* จุดบอกหน้า */
+#pageDots{
+  position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%);
+  z-index: 18; display: none; gap: 14px;
+}
+#letterScene.on ~ #pageDots{ display: flex; }
+#pageDots .dot{
+  width: 13px; height: 13px; border-radius: 50%; cursor: pointer; border: none; padding: 0;
+  background: rgba(255,255,255,.35); box-shadow: 0 0 8px rgba(255,120,170,.5);
+  transition: background 400ms ease, transform 400ms ease;
+}
+#pageDots .dot:active{ transform: scale(.85); }
+#pageDots .dot.on{ background: var(--gold); transform: scale(1.3); }
+/* ปุ่มโหมดแก้ไขข้อความ */
+#editBtn{
+  position: fixed; right: 16px; bottom: 16px; z-index: 20;
+  width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer;
+  font-size: 20px; display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.92); color: var(--pink-deep,#d94f86);
+  box-shadow: 0 6px 18px rgba(60,20,40,.45);
+}
+#editBtn:active{ transform: scale(.92); }
+#editBtn.editing{ background: var(--pink-deep,#d94f86); color: #fff; }
+/* —— */
+body.edit-on .l-greet,
+body.edit-on .l-body,
+body.edit-on .l-sign,
+body.edit-on .l-cap,
+body.edit-on .env-addr{
+  outline: 2px dashed rgba(217,79,134,.6); outline-offset: 3px; border-radius: 4px;
+  cursor: text;
+}
+body.edit-on #letterScene{ cursor: auto; }
+
+@keyframes fadeUp{ from{ opacity:0; transform: translateY(22px) } to{ opacity:1; transform: translateY(0) } }
+
+@media (prefers-reduced-motion: reduce){
+  #starBtn, .comet, .tw{ animation: none; }
+}
+</style>
+</head>
+<body>
+  <div id="sky"></div>
+  <div id="shootLayer"></div>
+  <div id="starfield"></div>
+  <div id="zoomWorld"><div id="heart"></div></div>
+  <div id="lyricLayer"></div>
+  <canvas id="fx"></canvas>
+  <!-- เพลง: วางไฟล์เองที่ assets/song.mp3 (ยาว ~1:40) -->
+  <audio id="song" src="assets/song.mp3" preload="auto"></audio>
+
+  <div id="intro">
+    <button id="starBtn" aria-label="เปิดจดหมายจากดวงดาว">
+      <span class="comet"></span>
+      <div id="envelope">
+        <div class="env-paper"></div>
+        <div class="env-body"></div>
+        <div class="env-addr">ถึง ยูนิก ♡</div>
+        <div class="env-stamp"></div>
+        <div class="env-pocket"></div>
+        <div class="env-flap"></div>
+        <div class="env-seal">✦</div>
+      </div>
+    </button>
+  </div>
+
+  <!-- จดหมาย (zoom เข้าไปข้างในซอง) — หลายหน้า -->
+  <div id="letterScene">
+    <div id="letterStack"></div>
+  </div>
+  <div id="pageDots"></div>
+  <button id="editBtn" title="แก้ไขข้อความ">✏️</button>
+
+<script>
+/* =========================================================================
+   ✏️ ค่าที่แก้ได้
+========================================================================= */
+/* จดหมายจากดวงดาว — แก้ข้อความ/รูป/จังหวะเปลี่ยนหน้าได้ตรงนี้
+   pages: จดหมายหลายหน้า — t = วินาทีของเพลงที่ให้ "เปิดหน้านั้น"
+   photo: ใส่ path รูป (เช่น 'assets/pic.jpg') ปล่อยว่างจะเป็นช่องลายไว้วางรูป
+   เพลงยาว ~1:40 → ตั้งให้ครบ 3 หน้าใน 1:30 */
+const LETTER = {
+  stamp: (window.__resources&&window.__resources.stamp) || 'assets/stamp.png',   // รูปสแตมป์ → ติดมุมขวาบนจดหมาย + หน้าซอง
+  pages: [
+    {
+      t: 0,
+      greet: 'ถึงยูนิก',
+      body: 'ผมนั่งเขียนจดหมายนี้ใต้ท้องฟ้าที่เต็มไปด้วยดาว\nแล้วก็นึกถึงคุณขึ้นมาอีกครั้ง\n\nตั้งแต่วันที่มีคุณเข้ามาในชีวิต\nทุก ๆ วันของผมก็อบอุ่นขึ้นเสมอ',
+      photo: (window.__resources&&window.__resources.pic1) || 'assets/pic1.jpg', cap: 'ครั้งแรก ♡',
+    },
+    {
+      t: 30,
+      body: 'บางคืนที่เหนื่อยล้า เพียงได้คิดถึงรอยยิ้มของคุณ\nโลกทั้งใบก็ดูอ่อนโยนขึ้นมา\n\nไม่ว่าเราจะห่างกันไกลแค่ไหน\nแสงดาวก็ยังพาใจของผมเดินทางไปหาคุณทุกคืน',
+      photo: (window.__resources&&window.__resources.pic2) || 'assets/pic2.jpg', cap: 'คิดถึงคุณ ♡',
+    },
+    {
+      t: 60,
+      body: 'ขอบคุณที่เป็นดาวที่สว่างที่สุดของผม\nและขอบคุณที่ยอมให้ผมได้รักคุณ\n\nไม่ว่าเวลาจะผ่านไปนานเท่าไหร่\nผมก็อยากอยู่ข้าง ๆ คุณ… ตลอดไป 💗',
+      sign: 'จากคนที่รักคุณที่สุด',
+      photo: (window.__resources&&window.__resources.pic4) || 'assets/pic4.jpg', cap: 'เรา ♡',
+    },
+  ],
+};
+
+const CONFIG = {
+  scatterCount: 130,   // จำนวนดาวที่กระจายตอนกด
+  fieldStars:   110,   // จำนวนดาวประดับบนฟ้าหลังกด
+  contentDelayMs: 300, // เริ่มเนื้อหา (หัวใจ+เนื้อเพลง) หลังกด 0.3 วินาที
+  musicVolume:   0.85, // ระดับเสียง 0–1
+  songStartSeconds: 0, // เริ่มเพลงที่วินาทีที่กำหนด (ข้าม intro ได้)
+  songDurationSec: 100,// ความยาวเพลงที่จะเล่น (1:40 = 100 วินาที) แล้วค่อย ๆ เฟดจบ
+};
+
+/* เนื้อเพลง "วิ่งผ่านซ้าย/ขวา" ต่อเนื่อง
+   ⚠️ ลิขสิทธิ์: ใส่เป็นตัวอย่างไว้ไม่กี่ท่อน ผู้ใช้เติมเนื้อเต็มเองได้ */
+/* เนื้อเพลง sync ตามเวลาเพลง (t = วินาที) — จาก .lrc ที่แนบมา
+   เล่นช่วง 0 → 1:40 (ท่อนภาษาอังกฤษจบพอดี) */
+const LYRICS = [
+  { t: 5.41,  text: 'I found a love for me' },
+  { t: 13.50, text: 'Oh darling, just dive right in and follow my lead' },
+  { t: 20.71, text: 'Well, I found a girl, beautiful and sweet' },
+  { t: 28.69, text: 'Oh, I never knew you were the someone waiting for me' },
+  { t: 35.96, text: "'Cause we were just kids when we fell in love" },
+  { t: 40.75, text: 'Not knowing what it was, I will not give you up this time' },
+  { t: 51.84, text: 'But darling, just kiss me slow, your heart is all I own' },
+  { t: 59.50, text: "And in your eyes, you're holding mine" },
+  { t: 66.04, text: "Baby, I'm dancing in the dark with you between my arms" },
+  { t: 77.50, text: 'Barefoot on the grass, listening to our favourite song' },
+  { t: 84.57, text: 'When you said you looked a mess, I whispered underneath my breath' },
+  { t: 91.95, text: 'But you heard it, darling, you look perfect tonight' },
+];
+
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function rand(a,b){ return a + Math.random()*(b-a); }
+
+/* ── canvas ─────────────────────────────────────────────── */
+const canvas = document.getElementById('fx');
+const ctx = canvas.getContext('2d');
+let W=0,H=0,DPR=1;
+function resize(){
+  DPR = Math.min(window.devicePixelRatio||1, 2);
+  W = innerWidth; H = innerHeight;
+  canvas.width = W*DPR; canvas.height = H*DPR;
+  canvas.style.width = W+'px'; canvas.style.height = H+'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+resize(); addEventListener('resize', resize);
+
+const MAX = 220;
+const particles = [];
+
+function starPath(g,r){
+  g.beginPath();
+  for(let i=0;i<10;i++){
+    const a=(Math.PI/5)*i - Math.PI/2;
+    const rad = i%2===0 ? r : r*0.44;
+    const px=Math.cos(a)*rad, py=Math.sin(a)*rad;
+    i===0 ? g.moveTo(px,py) : g.lineTo(px,py);
+  }
+  g.closePath();
+}
+
+// ดาวกระจาย "ขึ้นฟ้า" จากจุดกลาง
+function scatterUp(x,y,count){
+  for(let i=0;i<count;i++){
+    if(particles.length>=MAX) break;
+    const ang = rand(-Math.PI, 0) + (Math.random()<.3 ? rand(-0.5,0.5) : 0); // ส่วนใหญ่พุ่งขึ้น
+    const spd = rand(90, 460);
+    particles.push({
+      x, y,
+      vx: Math.cos(ang)*spd * rand(.7,1.3),
+      vy: Math.sin(ang)*spd - rand(20,80),   // ลบ = ขึ้นบน
+      life:0, maxLife: rand(2.6,4.6),
+      size: rand(9,24), rot: rand(0,6.28), vr: rand(-0.03,0.03),
+      tw: rand(0,6.28),
+      color: Math.random()<.7 ? '#ffd86b' : '#fff3c8',
+      gravity: 26,
+    });
+  }
+}
+
+let last = performance.now();
+function tick(now){
+  const dt = Math.min((now-last)/1000, .05); last = now;
+  ctx.clearRect(0,0,W,H);
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.life+=dt;
+    if(p.life>=p.maxLife){ particles.splice(i,1); continue; }
+    p.vy += p.gravity*dt;
+    if(p.swayAmp){ p.sway += p.swaySpeed*dt; }
+    p.x += (p.vx + (p.swayAmp ? Math.sin(p.sway)*p.swayAmp : 0))*dt; p.y += p.vy*dt; p.rot += p.vr;
+    const lr=p.life/p.maxLife;
+    let a = lr<.12 ? lr/.12 : lr>.7 ? (1-lr)/.3 : 1;
+    a=Math.max(0,Math.min(1,a));
+    const twk = .7 + .3*Math.sin(p.tw + now*0.006);
+    ctx.save();
+    ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+    ctx.globalAlpha = a*twk;
+    ctx.shadowColor = p.color; ctx.shadowBlur = 14;
+    ctx.fillStyle = p.color;
+    if(p.type === 'heart'){ heartPath(ctx, p.size*0.7); ctx.fill(); }
+    else { starPath(ctx, p.size*0.6); ctx.fill(); }
+    ctx.restore();
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+/* ── หัวใจดาว (constellation) ───────────────────────────── */
+/* ── หัวใจ bezier + พื้นหลัง ambient ────────────── */
+function heartPath(g, s){
+  g.beginPath();
+  g.moveTo(0, s*0.35);
+  g.bezierCurveTo(0, -s*0.05, -s*0.5, -s*0.1, -s*0.5, s*0.25);
+  g.bezierCurveTo(-s*0.5, s*0.55, -s*0.1, s*0.75, 0, s);
+  g.bezierCurveTo(s*0.1, s*0.75, s*0.5, s*0.55, s*0.5, s*0.25);
+  g.bezierCurveTo(s*0.5, -s*0.1, 0, -s*0.05, 0, s*0.35);
+  g.closePath();
+}
+const PINKS = ['#ff8fb3','#ff6fa1','#ffa9c6','#ff5c92','#ffc2d6'];
+let ambientOn = false, ambientTimer = null;
+function spawnAmbient(){
+  if(!ambientOn || particles.length > MAX - 16) return;
+  const isHeart = Math.random() < 0.6;
+  particles.push({
+    x: rand(0, W), y: H + 30,
+    vx: rand(-10, 10), vy: -rand(24, 52),
+    life: 0, maxLife: rand(6, 10),
+    size: rand(10, 24), rot: rand(0, 6.28), vr: rand(-0.015, 0.015),
+    tw: rand(0, 6.28),
+    type: isHeart ? 'heart' : 'star',
+    color: isHeart ? PINKS[(Math.random()*PINKS.length)|0] : (Math.random()<.5 ? '#fff3c8' : '#ffd0e2'),
+    gravity: 0, sway: rand(0,6.28), swaySpeed: rand(.5,1.2), swayAmp: rand(6,18),
+  });
+}
+function startAmbient(){
+  if(ambientOn) return; ambientOn = true;
+  ambientTimer = setInterval(spawnAmbient, reduceMotion ? 900 : 320);
+}
+
+const heartEl = document.getElementById('heart');
+function heartXY(t){
+  const x = 16*Math.pow(Math.sin(t),3);
+  const y = 13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t);
+  return { x, y };
+}
+function buildHeart(){
+  let html = '';
+  const cx = 50, sc = 2.55, cyOff = 2.5;
+  // เส้นขอบหัวใจ (ดาวเด่น)
+  const N = 64;
+  for(let i=0;i<N;i++){
+    const t = (i/N)*Math.PI*2;
+    const p = heartXY(t);
+    const left = cx + p.x*sc;
+    const top  = 50 - (p.y + cyOff)*sc;
+    const s = rand(3,6).toFixed(1);
+    const d = rand(1.8,4.4).toFixed(1), delay = rand(0,3).toFixed(1);
+    html += `<span class="hs core" style="left:${left}%;top:${top}%;width:${s}px;height:${s}px;--d:${d}s;animation-delay:${delay}s"></span>`;
+  }
+  // เติมภายในหัวใจ (ดาวจาง ๆ)
+  let inner = 0;
+  while(inner < 70){
+    const rx = rand(-17,17), ry = rand(-16,13);
+    // สมการหัวใจ: อยู่ในรูปหรือไม่
+    const xa = rx/16, ya = (ry+cyOff)/16;
+    if(Math.pow(xa*xa + ya*ya - 1, 3) - xa*xa*Math.pow(ya,3) <= 0){
+      const left = cx + rx*sc;
+      const top  = 50 - (ry + cyOff)*sc;
+      const s = rand(1.5,3.4).toFixed(1);
+      const d = rand(2,4.8).toFixed(1), delay = rand(0,4).toFixed(1);
+      html += `<span class="hs" style="left:${left}%;top:${top}%;width:${s}px;height:${s}px;--d:${d}s;animation-delay:${delay}s"></span>`;
+      inner++;
+    }
+  }
+  heartEl.innerHTML = html;
+}
+buildHeart();
+
+/* ── เนื้อเพลง : สลับซ้าย/ขวา zoom ออก (หลบการ์ด) ──────── */
+const lyricLayer = document.getElementById('lyricLayer');
+// วางในช่องว่างแนวตั้งฝั่งนั้น ที่สูงพอ ไม่ทับการ์ด
+function placeLyric(el, side){
+  const vw = innerWidth, vh = innerHeight;
+  const edge = 4;                                   // ระยะห่างจากขอบจอ (%)
+  const wpct = (el.offsetWidth  / vw) * 100;
+  const hpct = (el.offsetHeight / vh) * 100;
+  const x = side === 'left' ? edge : (100 - edge - wpct);
+  const need = hpct + 4;
+  // หลบใบจดหมายตรงกลาง (สงวนพื้นที่กลางจอ ~30% กว้าง)
+  const letterHalf = 21;   // ครึ่งความกว้างใบจดหมายโดยประมาณ (%)
+  const overlapsLetter = (x + wpct > 50 - letterHalf) && (x < 50 + letterHalf);
+  let top;
+  if(overlapsLetter){
+    // วางบน/ล่างของใบจดหมาย
+    const zone = Math.random() < 0.5 ? [4, 20] : [78, 92 - hpct];
+    top = rand(zone[0], Math.max(zone[0], zone[1]));
+  } else {
+    top = rand(8, 88 - hpct);
+  }
+  el.style.left = x + '%';
+  el.style.top  = top + '%';
+}
+function showLyric(text, side){
+  if(!text) return;
+  const el = document.createElement('div');
+  el.className = 'lyric ' + side;
+  el.textContent = text;
+  el.style.left = '-9999px';                        // ซ่อนไว้วัดขนาดก่อน
+  lyricLayer.appendChild(el);
+  placeLyric(el, side);
+  el.addEventListener('animationend', ()=>el.remove());
+}
+let lyricTimer = null, lyricFired = [];
+function runLyrics(){
+  lyricFired = LYRICS.map(()=>false);
+  // sync ตามเวลาเพลงจริง ถ้าเล่นเพลงได้
+  const onTime = () => {
+    const t = song.currentTime + 2.5;   // เร็วขึ้น 2.5 วินาที
+    LYRICS.forEach((l, i) => {
+      if(!lyricFired[i] && t >= l.t){ lyricFired[i] = true; showLyric(l.text, i % 2 === 0 ? 'left' : 'right'); }
+    });
+    if(t >= CONFIG.songDurationSec) song.removeEventListener('timeupdate', onTime);
+  };
+  song.addEventListener('timeupdate', onTime);
+  // สำรอง: ถ้าไม่มีไฟล์เพลง/เล่นไม่ได้ ให้เล่นตามนาฬิกาเอง
+  const t0 = performance.now();
+  lyricTimer = setInterval(() => {
+    if(song.currentTime > 0.05){ clearInterval(lyricTimer); return; }  // เพลงเล่นแล้ว ใช้ timeupdate แทน
+    const t = (performance.now() - t0) / 1000;
+    LYRICS.forEach((l, i) => {
+      if(!lyricFired[i] && t >= l.t){ lyricFired[i] = true; showLyric(l.text, i % 2 === 0 ? 'left' : 'right'); }
+    });
+    if(t >= CONFIG.songDurationSec) clearInterval(lyricTimer);
+  }, 200);
+}
+
+/* ── จดหมายหลายหน้า + เปลี่ยนหน้าอนิเมชั่น ─────────────── */
+const letterStack = document.getElementById('letterStack');
+const pageDots = document.getElementById('pageDots');
+const PAGES = LETTER.pages || [];
+function buildLetter(){
+  let html = '';
+  PAGES.forEach((p, i) => {
+    const greet = p.greet ? `<div class="l-greet">${p.greet}</div>` : '';
+    const sign  = p.sign  ? `<div class="l-sign${p.photo!==undefined?' pad':''}">${p.sign}</div>` : '';
+    let attach = '';
+    if(p.photo !== undefined){
+      const bg = p.photo ? `style="background-image:url('${p.photo}')"` : '';
+      attach = `<div class="l-attach"><div class="l-photo" ${bg}></div><div class="l-cap">${p.cap||''}</div></div>`;
+    }
+    html += `<div class="l-page ${i===0?'active':'upcoming'}" data-i="${i}">
+               ${greet}<div class="l-body">${p.body||''}</div>${sign}${attach}${LETTER.stamp?`<div class="l-stamp"><div class="l-stamp-img" style="background-image:url('${LETTER.stamp}')"></div></div>`:''}
+             </div>`;
+  });
+  letterStack.innerHTML = html;
+  pageDots.innerHTML = PAGES.map((_,i)=>`<button class="dot${i===0?' on':''}" data-p="${i}" aria-label="หน้า ${i+1}"></button>`).join('');
+  pageDots.querySelectorAll('.dot').forEach(d => {
+    d.addEventListener('click', (e)=>{ e.stopPropagation(); manualNav = true; goToPage(+d.dataset.p); });
+  });
+}
+buildLetter();
+let curPage = 0, manualNav = false;
+function goToPage(n){
+  if(n === curPage || n < 0 || n >= PAGES.length) return;
+  const pages = letterStack.querySelectorAll('.l-page');
+  const dots  = pageDots.querySelectorAll('.dot');
+  pages.forEach((el, i) => {
+    el.classList.remove('active','past','upcoming');
+    el.classList.add(i < n ? 'past' : i > n ? 'upcoming' : 'active');
+  });
+  dots.forEach((d,i)=>d.classList.toggle('on', i===n));
+  curPage = n;
+}
+function nextPage(){ manualNav = true; goToPage(Math.min(curPage+1, PAGES.length-1)); }
+function prevPage(){ manualNav = true; goToPage(Math.max(curPage-1, 0)); }
+// แตะ/คลิกครึ่งขวา = หน้าถัดไป, ครึ่งซ้าย = หน้าก่อน
+const lScene = document.getElementById('letterScene');
+lScene.addEventListener('click', (e) => {
+  if(document.body.classList.contains('edit-on')) return;   // โหมดแก้ไข: ไม่เปลี่ยนหน้า
+  if(e.clientX > innerWidth * 0.42) nextPage(); else prevPage();
+});
+addEventListener('keydown', (e) => {
+  if(!lScene.classList.contains('on') || document.body.classList.contains('edit-on')) return;
+  if(e.key === 'ArrowRight' || e.key === ' ') nextPage();
+  if(e.key === 'ArrowLeft') prevPage();
+});
+
+/* ── โหมดแก้ไขข้อความ ─────────────────────────────────── */
+const editBtn = document.getElementById('editBtn');
+const EDIT_SEL = '.l-greet,.l-body,.l-sign,.l-cap,.env-addr';
+function editKey(el){
+  const page = el.closest('.l-page');
+  const idx = page ? page.dataset.i : 'env';
+  return 'txt:' + idx + ':' + [...el.classList].join('.');
+}
+function restoreEdits(){
+  document.querySelectorAll(EDIT_SEL).forEach(el => {
+    const v = localStorage.getItem(editKey(el));
+    if(v !== null) el.textContent = v;
+  });
+}
+function toggleEdit(){
+  const on = !document.body.classList.contains('edit-on');
+  // ถ้ายังอยู่หน้าซอง ให้เข้าหน้าจดหมายทันทีเพื่อแก้ได้
+  if(on && !lScene.classList.contains('on')){
+    intro.style.display = 'none';
+    lScene.classList.add('on');
+    starfield.classList.add('on','pink');
+    started = true;
+    startAmbient();
+    fitAllPages();
+  }
+  document.body.classList.toggle('edit-on', on);
+  editBtn.classList.toggle('editing', on);
+  manualNav = true; clearInterval(pageTimer);   // หยุดเลื่อนหน้าอัตโนมัติระหว่างแก้
+  document.querySelectorAll(EDIT_SEL).forEach(el => {
+    el.contentEditable = on ? 'true' : 'false';
+    if(on){
+      el.oninput = () => localStorage.setItem(editKey(el), el.textContent);
+      el.onpaste = (ev) => {                       // วางเป็นข้อความล้วน (คงฟอนต์เดิม)
+        ev.preventDefault();
+        const t = (ev.clipboardData || window.clipboardData).getData('text');
+        document.execCommand('insertText', false, t);
+      };
+    }
+  });
+  if(!on) fitAllPages();   // ออกจากโหมดแก้ไข → จัดขนาดคำให้พอดีใหม่
+}
+editBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleEdit(); });
+
+/* —— จัดขนาดคำให้พอดีแต่ละหน้า —— */
+// จัดขนาดตัวอักษรให้เนื้อความพอดีแต่ละหน้า (ยึดเส้นบรรทัดไว้)
+function fitPage(el){
+  const base = Math.min(38, innerWidth * 0.062);
+  let lh = base;
+  el.style.setProperty('--lh', lh + 'px');
+  let guard = 0;
+  while(lh > 19 && el.scrollHeight > el.clientHeight + 1 && guard++ < 40){
+    lh -= 1; el.style.setProperty('--lh', lh + 'px');
+  }
+}
+function fitAllPages(){ letterStack.querySelectorAll('.l-page').forEach(fitPage); }
+restoreEdits();
+fitAllPages();
+addEventListener('resize', fitAllPages);
+function runPages(){
+  const check = () => {
+    if(manualNav){ clearInterval(pageTimer); return; }   // ผู้ใช้กดเปลี่ยนเอง → หยุดเลื่อนอัตโนมัติ
+    const t = (song.currentTime > 0.05) ? song.currentTime : ((performance.now()-pageT0)/1000);
+    let target = 0;
+    for(let i=0;i<PAGES.length;i++){ if(t >= (PAGES[i].t||0)) target = i; }
+    if(target !== curPage) goToPage(target);
+  };
+  pageTimer = setInterval(check, 300);
+}
+let pageTimer = null, pageT0 = 0;
+
+const starfield = document.getElementById('starfield');
+function buildField(){
+  let html='';
+  for(let i=0;i<CONFIG.fieldStars;i++){
+    const gold = Math.random()<.28;
+    const s = rand(1,3.4).toFixed(1);
+    const x = rand(0,100).toFixed(1), y = rand(0,88).toFixed(1);
+    const d = rand(1.8,4.6).toFixed(1), delay = rand(0,4).toFixed(1);
+    html += `<span class="tw${gold?' gold':''}" style="left:${x}%;top:${y}%;width:${s}px;height:${s}px;--d:${d}s;animation-delay:${delay}s"></span>`;
+  }
+  starfield.innerHTML = html;
+}
+buildField();
+
+/* ── ดาวตก (shooting stars) ───────────────────────────── */
+const shootLayer = document.getElementById('shootLayer');
+function spawnShoot(){
+  if(reduceMotion) return;
+  const el = document.createElement('div');
+  el.className = 'shoot';
+  const fromTop = rand(0, 45);              // เริ่มจากด้านบน
+  const fromLeft = rand(35, 100);           // ค่อนไปทางขวา
+  const dur = rand(0.9, 1.6);
+  const dxVW = -rand(45, 80), dyVH = rand(28, 50);   // เดินทางลง-ซ้าย
+  // มุมของหาง = ทิศตรงข้ามการเคลื่อนที่ (หางลากตามหลังดาว) — คำนวณเป็น px จริง
+  const dxpx = dxVW/100 * innerWidth, dypx = dyVH/100 * innerHeight;
+  const ang = Math.atan2(dypx, dxpx) * 180/Math.PI;   // หัวพุ่งไปตามทิศ หางลากตามหลัง
+  el.style.top = fromTop + '%';
+  el.style.left = fromLeft + '%';
+  el.style.setProperty('--a', ang.toFixed(1) + 'deg');
+  el.style.setProperty('--dx', dxVW + 'vw');
+  el.style.setProperty('--dy', dyVH + 'vh');
+  el.style.animation = `shootFly ${dur}s ease-in forwards`;
+  shootLayer.appendChild(el);
+  setTimeout(()=>el.remove(), dur*1000 + 100);
+}
+function startShoot(){
+  const loop = () => { spawnShoot(); setTimeout(loop, rand(1800, 4200)); };
+  setTimeout(loop, 1200);
+}
+startShoot();
+
+/* ── กดดาว → กระจายขึ้นฟ้า ─────────────────────────────── */
+const intro = document.getElementById('intro');
+const starBtn = document.getElementById('starBtn');
+const zoomWorld = document.getElementById('zoomWorld');
+const song = document.getElementById('song');
+song.volume = CONFIG.musicVolume;
+const letterScene = document.getElementById('letterScene');
+let started = false;
+
+let songStopped = false;
+function stopSong(){
+  songStopped = true;
+  try{ song.pause(); song.muted = true; }catch(e){}
+}
+function startMusic(){
+  try{
+    const seek = () => { try{ song.currentTime = CONFIG.songStartSeconds || 0; }catch(e){} };
+    if(song.readyState >= 1) seek(); else song.addEventListener('loadedmetadata', seek, { once:true });
+    const pr = song.play(); if(pr && pr.catch) pr.catch(()=>{});
+  }catch(e){}
+  // ค่อย ๆ เฟดเสียงจบเมื่อครบ 1:40 แล้วหยุดถาวร (กันเล่นเองซ้ำ)
+  const dur = CONFIG.songDurationSec;
+  setTimeout(()=>{
+    const fade = setInterval(()=>{
+      song.volume = Math.max(0, song.volume - 0.05);
+      if(song.volume <= 0.01){ clearInterval(fade); stopSong(); }
+    }, 120);
+  }, Math.max(0, (dur - 2)) * 1000);
+  // เผื่อเล่นเกินเวลา / เบราว์เซอร์เล่นเอง → หยุดทันที
+  song.addEventListener('timeupdate', () => {
+    if(song.currentTime >= dur && !songStopped) stopSong();
+  });
+  // ถ้าถูกสั่งหยุดแล้วแต่กลับมาเล่นเอง ให้หยุดซ้ำ
+  song.addEventListener('play', () => { if(songStopped) stopSong(); });
+}
+
+starBtn.addEventListener('click', () => {
+  if(started) return; started = true;
+  startMusic();
+  // เปิดฝาซอง → ดาวกระจายจากซอง → zoom เข้าไป → กระดาษจดหมายโผล่
+  starBtn.classList.add('open');
+  const r = starBtn.getBoundingClientRect();
+  setTimeout(()=>scatterUp(r.left + r.width/2, r.top + r.height*0.4, CONFIG.scatterCount), 500);
+  starfield.classList.add('on');
+
+  setTimeout(()=>{ intro.classList.add('go'); }, 750);        // เริ่ม zoom เข้าไป
+  setTimeout(()=>{
+    intro.style.display = 'none';
+    letterScene.classList.add('on');                          // โชว์กระดาษจดหมาย
+    editBtn.style.display = 'flex';
+    fitAllPages();
+    starfield.classList.add('pink');
+    startAmbient();
+    pageT0 = performance.now();
+    runPages();
+    runLyrics();
+  }, 1750);
+});
+</script>
+<template id="__bundler_thumbnail" data-bg-color="#101a44">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#101a44"/>
+    <g fill="#ffd86b">
+      <circle cx="240" cy="180" r="3"/><circle cx="420" cy="120" r="2.5"/><circle cx="900" cy="150" r="3"/><circle cx="1020" cy="260" r="2.5"/><circle cx="180" cy="420" r="2.5"/><circle cx="980" cy="560" r="3"/>
+    </g>
+    <g transform="translate(600 400)">
+      <path d="M0 60 C -80 -20 -150 -60 -150 -130 C -150 -190 -60 -190 0 -110 C 60 -190 150 -190 150 -130 C 150 -60 80 -20 0 60 Z" fill="#ff8fb3" transform="scale(1.1)"/>
+    </g>
+    <text x="600" y="700" font-family="sans-serif" font-size="60" fill="#ffe6a8" text-anchor="middle">ถึงยูนิก ✨</text>
+  </svg>
+</template>
+</body>
+</html>
